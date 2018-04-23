@@ -57,6 +57,7 @@ class BuiltinsConstantsTableBuilder;
 class CallInterfaceDescriptorData;
 class CancelableTaskManager;
 class CodeEventDispatcher;
+class ExternalCodeEventListener;
 class CodeGenerator;
 class CodeRange;
 class CodeStubDescriptor;
@@ -894,6 +895,9 @@ class Isolate : private HiddenFactory {
     DCHECK_NOT_NULL(logger_);
     return logger_;
   }
+  bool AddCodeEventListener(ExternalCodeEventListener* code_event_listener);
+  void RemoveCodeEventListener(ExternalCodeEventListener* code_event_listener);
+  bool has_code_event_listener() { return code_event_listener_count_ > 0; }
   StackGuard* stack_guard() { return &stack_guard_; }
   Heap* heap() { return &heap_; }
   wasm::WasmEngine* wasm_engine() const { return wasm_engine_.get(); }
@@ -1579,6 +1583,7 @@ class Isolate : private HiddenFactory {
   CpuProfiler* cpu_profiler_;
   HeapProfiler* heap_profiler_;
   std::unique_ptr<CodeEventDispatcher> code_event_dispatcher_;
+  unsigned int code_event_listener_count_ = 0;
   FunctionEntryHook function_entry_hook_;
 
   const AstStringConstants* ast_string_constants_;

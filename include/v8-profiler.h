@@ -992,6 +992,69 @@ struct HeapStatsUpdate {
   uint32_t size;  // New value of size field for the interval with this index.
 };
 
+/**
+ * Representation of a code creation event
+ */
+class V8_EXPORT CodeEvent {
+ public:
+  uintptr_t GetCodeStartAddress();
+  size_t GetCodeSize();
+  Local<String> GetFunctionName();
+  Local<String> GetScriptName();
+  int GetScriptLine();
+  int GetScriptColumn();
+  /**
+   * NOTE (mmarchini): We can't allocate objects in the heap when we collect
+   * existing code, and both the code type and the comment are not stored in the
+   * heap, so we return those as const char*.
+   */
+  const char* GetCodeType();
+  const char* GetComment();
+};
+
+/**
+ * Abstract class create code event handlers. A code event handler will be
+ * notified by the listener when JIT codes are created.
+ */
+class V8_EXPORT CodeEventHandler {
+ public:
+  virtual void Handler(CodeEvent* code_event);
+};
+
+/**
+ * Inteface to listen to code creation events.
+ */
+class V8_EXPORT CodeEventListener {
+ public:
+  /**
+   * Creates a new listener for the |isolate|. The isolate must be initialized.
+   * The listener object must be disposed after use by calling |Dispose| method.
+   * Multiple listeners can be created for the same isolate.
+   */
+  static CodeEventListener* New(Isolate* isolate);
+
+  /**
+   * Starts to notify the handler about code creation events. On start the
+   * listener will notify the handler about all existing codes in the heap.
+   * Calling it after the listener has started is a no-op.
+   */
+  void StartListening(CodeEventHandler* code_event_handler);
+
+  /**
+   * Stops listening to new code events. Calling it when the listener is not
+   * listening is a no-op.
+   */
+  void StopListening();
+
+  /** Disposes the listener object. */
+  void Dispose();
+
+ private:
+  CodeEventListener();
+  ~CodeEventListener();
+  CodeEventListener(const CodeEventListener&);
+  CodeEventListener& operator=(const CodeEventListener&);
+};
 
 }  // namespace v8
 
