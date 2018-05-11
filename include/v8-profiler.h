@@ -992,20 +992,18 @@ struct HeapStatsUpdate {
   uint32_t size;  // New value of size field for the interval with this index.
 };
 
-
-#define CODE_EVENTS_LIST(V)  \
-  V(Builtin) \
-  V(Callback) \
-  V(Eval) \
-  V(Function) \
-  V(InterpretedFunction) \
-  V(Handler) \
-  V(BytecodeHandler) \
-  V(LazyCompile) \
-  V(RegExp) \
-  V(Script) \
+#define CODE_EVENTS_LIST(V) \
+  V(Builtin)                \
+  V(Callback)               \
+  V(Eval)                   \
+  V(Function)               \
+  V(InterpretedFunction)    \
+  V(Handler)                \
+  V(BytecodeHandler)        \
+  V(LazyCompile)            \
+  V(RegExp)                 \
+  V(Script)                 \
   V(Stub)
-
 
 enum CodeEventType {
   kUnknownType = 0
@@ -1013,7 +1011,6 @@ enum CodeEventType {
   CODE_EVENTS_LIST(V)
 #undef V
 };
-
 
 /**
  * Representation of a code creation event

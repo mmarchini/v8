@@ -10132,11 +10132,13 @@ const char* CodeEvent::GetComment() {
 }
 
 const char* CodeEvent::GetCodeEventTypeName(CodeEventType code_event_type) {
-  switch(code_event_type) {
+  switch (code_event_type) {
     case kUnknownType:
       return "Unknown";
-#define V(Name) case k##Name##Type: return #Name;
-  CODE_EVENTS_LIST(V)
+#define V(Name)       \
+  case k##Name##Type: \
+    return #Name;
+      CODE_EVENTS_LIST(V)
 #undef V
   }
 }

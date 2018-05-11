@@ -45,24 +45,27 @@ static const char* kLogEventsNames[CodeEventListener::NUMBER_OF_LOG_EVENTS] = {
     LOG_EVENTS_AND_TAGS_LIST(DECLARE_EVENT)};
 #undef DECLARE_EVENT
 
-static v8::CodeEventType ChangeMeLater(CodeEventListener::LogEventsAndTags tag) {
-  switch(tag) {
+static v8::CodeEventType GetCodeEventTypeForTag(
+    CodeEventListener::LogEventsAndTags tag) {
+  switch (tag) {
     case CodeEventListener::NUMBER_OF_LOG_EVENTS:
 #define V(Event, _) case CodeEventListener::Event:
-  LOG_EVENTS_LIST(V)
+      LOG_EVENTS_LIST(V)
 #undef V
-    return v8::CodeEventType::kUnknownType;
-#define V(From, To) case CodeEventListener::From: return v8::CodeEventType::k##To##Type;
-  TAGS_LIST(V)
+      return v8::CodeEventType::kUnknownType;
+#define V(From, To)             \
+  case CodeEventListener::From: \
+    return v8::CodeEventType::k##To##Type;
+      TAGS_LIST(V)
 #undef V
   }
 }
 #define CALL_CODE_EVENT_HANDLER(Call) \
-if(listener_) { \
-  listener_->Call; \
-} else { \
-  PROFILE(isolate_, Call); \
-}
+  if (listener_) {                    \
+    listener_->Call;                  \
+  } else {                            \
+    PROFILE(isolate_, Call);          \
+  }
 
 static const char* ComputeMarker(SharedFunctionInfo* shared,
                                  AbstractCode* code) {
@@ -386,13 +389,11 @@ void ExternalCodeEventListener::CodeCreateEvent(
   code_event.code_start_address =
       static_cast<uintptr_t>(code->InstructionStart());
   code_event.code_size = static_cast<size_t>(code->InstructionSize());
-  code_event.function_name =
-      isolate_->factory()->empty_string();
-  code_event.script_name =
-      isolate_->factory()->empty_string();
+  code_event.function_name = isolate_->factory()->empty_string();
+  code_event.script_name = isolate_->factory()->empty_string();
   code_event.script_line = 0;
   code_event.script_column = 0;
-  code_event.code_type = ChangeMeLater(tag);
+  code_event.code_type = GetCodeEventTypeForTag(tag);
   code_event.comment = comment;
 
   code_event_handler_->Handler(reinterpret_cast<v8::CodeEvent*>(&code_event));
@@ -408,11 +409,10 @@ void ExternalCodeEventListener::CodeCreateEvent(
       static_cast<uintptr_t>(code->InstructionStart());
   code_event.code_size = static_cast<size_t>(code->InstructionSize());
   code_event.function_name = name_string;
-  code_event.script_name =
-      isolate_->factory()->empty_string();
+  code_event.script_name = isolate_->factory()->empty_string();
   code_event.script_line = 0;
   code_event.script_column = 0;
-  code_event.code_type = ChangeMeLater(tag);
+  code_event.code_type = GetCodeEventTypeForTag(tag);
   code_event.comment = "";
 
   code_event_handler_->Handler(reinterpret_cast<v8::CodeEvent*>(&code_event));
@@ -429,11 +429,10 @@ void ExternalCodeEventListener::CodeCreateEvent(
       static_cast<uintptr_t>(code->InstructionStart());
   code_event.code_size = static_cast<size_t>(code->InstructionSize());
   code_event.function_name = name_string;
-  code_event.script_name =
-    isolate_->factory()->empty_string();
+  code_event.script_name = isolate_->factory()->empty_string();
   code_event.script_line = 0;
   code_event.script_column = 0;
-  code_event.code_type = ChangeMeLater(tag);
+  code_event.code_type = GetCodeEventTypeForTag(tag);
   code_event.comment = "";
 
   code_event_handler_->Handler(reinterpret_cast<v8::CodeEvent*>(&code_event));
@@ -456,7 +455,7 @@ void ExternalCodeEventListener::CodeCreateEvent(
   code_event.script_name = source_string;
   code_event.script_line = line;
   code_event.script_column = column;
-  code_event.code_type = ChangeMeLater(tag);
+  code_event.code_type = GetCodeEventTypeForTag(tag);
   code_event.comment = "";
 
   code_event_handler_->Handler(reinterpret_cast<v8::CodeEvent*>(&code_event));
@@ -475,11 +474,10 @@ void ExternalCodeEventListener::RegExpCodeCreateEvent(AbstractCode* code,
       static_cast<uintptr_t>(code->InstructionStart());
   code_event.code_size = static_cast<size_t>(code->InstructionSize());
   code_event.function_name = Handle<String>(source, isolate_);
-  code_event.script_name =
-     isolate_->factory()->empty_string();
+  code_event.script_name = isolate_->factory()->empty_string();
   code_event.script_line = 0;
   code_event.script_column = 0;
-  code_event.code_type = ChangeMeLater(CodeEventListener::REG_EXP_TAG);
+  code_event.code_type = GetCodeEventTypeForTag(CodeEventListener::REG_EXP_TAG);
   code_event.comment = "";
 
   code_event_handler_->Handler(reinterpret_cast<v8::CodeEvent*>(&code_event));
@@ -2106,8 +2104,9 @@ void CollectExistingCode::LogBytecodeHandler(
     Code* code) {
   std::string bytecode_name =
       interpreter::Bytecodes::ToString(bytecode, operand_scale);
-    CALL_CODE_EVENT_HANDLER(CodeCreateEvent(CodeEventListener::BYTECODE_HANDLER_TAG,
-                               AbstractCode::cast(code), bytecode_name.c_str()))
+  CALL_CODE_EVENT_HANDLER(
+      CodeCreateEvent(CodeEventListener::BYTECODE_HANDLER_TAG,
+                      AbstractCode::cast(code), bytecode_name.c_str()))
 }
 
 void CollectExistingCode::LogBytecodeHandlers() {
@@ -2131,7 +2130,6 @@ void CollectExistingCode::LogBytecodeHandlers() {
   }
 }
 
-
 void CollectExistingCode::LogExistingFunction(Handle<SharedFunctionInfo> shared,
                                               Handle<AbstractCode> code) {
   if (shared->script()->IsScript()) {
@@ -2142,22 +2140,22 @@ void CollectExistingCode::LogExistingFunction(Handle<SharedFunctionInfo> shared,
     if (script->name()->IsString()) {
       Handle<String> script_name(String::cast(script->name()));
       if (line_num > 0) {
-        CALL_CODE_EVENT_HANDLER(CodeCreateEvent(
-              Logger::ToNativeByScript(CodeEventListener::LAZY_COMPILE_TAG,
-                                       *script),
-              *code, *shared, *script_name, line_num, column_num))
+        CALL_CODE_EVENT_HANDLER(
+            CodeCreateEvent(Logger::ToNativeByScript(
+                                CodeEventListener::LAZY_COMPILE_TAG, *script),
+                            *code, *shared, *script_name, line_num, column_num))
       } else {
         // Can't distinguish eval and script here, so always use Script.
         CALL_CODE_EVENT_HANDLER(CodeCreateEvent(
-              Logger::ToNativeByScript(CodeEventListener::SCRIPT_TAG, *script),
-              *code, *shared, *script_name))
+            Logger::ToNativeByScript(CodeEventListener::SCRIPT_TAG, *script),
+            *code, *shared, *script_name))
       }
     } else {
-      CALL_CODE_EVENT_HANDLER(CodeCreateEvent(
-            Logger::ToNativeByScript(CodeEventListener::LAZY_COMPILE_TAG,
-                                     *script),
-            *code, *shared, isolate_->heap()->empty_string(), line_num,
-            column_num))
+      CALL_CODE_EVENT_HANDLER(
+          CodeCreateEvent(Logger::ToNativeByScript(
+                              CodeEventListener::LAZY_COMPILE_TAG, *script),
+                          *code, *shared, isolate_->heap()->empty_string(),
+                          line_num, column_num))
     }
   } else if (shared->IsApiFunction()) {
     // API function.
@@ -2173,8 +2171,9 @@ void CollectExistingCode::LogExistingFunction(Handle<SharedFunctionInfo> shared,
       CALL_CODE_EVENT_HANDLER(CallbackEvent(shared->DebugName(), entry_point))
     }
   } else {
-    CALL_CODE_EVENT_HANDLER(CodeCreateEvent(CodeEventListener::LAZY_COMPILE_TAG, *code,
-                                 *shared, isolate_->heap()->empty_string()))
+    CALL_CODE_EVENT_HANDLER(CodeCreateEvent(CodeEventListener::LAZY_COMPILE_TAG,
+                                            *code, *shared,
+                                            isolate_->heap()->empty_string()))
   }
 }
 
