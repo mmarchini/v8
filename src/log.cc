@@ -40,10 +40,23 @@
 namespace v8 {
 namespace internal {
 
-#define DECLARE_EVENT(ignore1, name) name,
+#define DECLARE_EVENT(ignore1, name) #name,
 static const char* kLogEventsNames[CodeEventListener::NUMBER_OF_LOG_EVENTS] = {
     LOG_EVENTS_AND_TAGS_LIST(DECLARE_EVENT)};
 #undef DECLARE_EVENT
+
+static v8::CodeEventType ChangeMeLater(CodeEventListener::LogEventsAndTags tag) {
+  switch(tag) {
+    case CodeEventListener::NUMBER_OF_LOG_EVENTS:
+#define V(Event, _) case CodeEventListener::Event:
+  LOG_EVENTS_LIST(V)
+#undef V
+    return v8::CodeEventType::kUnknownType;
+#define V(From, To) case CodeEventListener::From: return v8::CodeEventType::k##To##Type;
+  TAGS_LIST(V)
+#undef V
+  }
+}
 
 static const char* ComputeMarker(SharedFunctionInfo* shared,
                                  AbstractCode* code) {
@@ -372,7 +385,7 @@ void ExternalCodeEventListener::CodeCreateEvent(
       Handle<String>(isolate_->heap()->empty_string(), isolate_);
   code_event.script_line = 0;
   code_event.script_column = 0;
-  code_event.code_type = kLogEventsNames[tag];
+  code_event.code_type = ChangeMeLater(tag);
   code_event.comment = comment;
 
   code_event_handler_->Handler(reinterpret_cast<v8::CodeEvent*>(&code_event));
@@ -392,7 +405,7 @@ void ExternalCodeEventListener::CodeCreateEvent(
       Handle<String>(isolate_->heap()->empty_string(), isolate_);
   code_event.script_line = 0;
   code_event.script_column = 0;
-  code_event.code_type = kLogEventsNames[tag];
+  code_event.code_type = ChangeMeLater(tag);
   code_event.comment = "";
 
   code_event_handler_->Handler(reinterpret_cast<v8::CodeEvent*>(&code_event));
@@ -413,7 +426,7 @@ void ExternalCodeEventListener::CodeCreateEvent(
       Handle<String>(isolate_->heap()->empty_string(), isolate_);
   code_event.script_line = 0;
   code_event.script_column = 0;
-  code_event.code_type = kLogEventsNames[tag];
+  code_event.code_type = ChangeMeLater(tag);
   code_event.comment = "";
 
   code_event_handler_->Handler(reinterpret_cast<v8::CodeEvent*>(&code_event));
@@ -436,7 +449,7 @@ void ExternalCodeEventListener::CodeCreateEvent(
   code_event.script_name = source_string;
   code_event.script_line = line;
   code_event.script_column = column;
-  code_event.code_type = kLogEventsNames[tag];
+  code_event.code_type = ChangeMeLater(tag);
   code_event.comment = "";
 
   code_event_handler_->Handler(reinterpret_cast<v8::CodeEvent*>(&code_event));
@@ -459,7 +472,7 @@ void ExternalCodeEventListener::RegExpCodeCreateEvent(AbstractCode* code,
       Handle<String>(isolate_->heap()->empty_string(), isolate_);
   code_event.script_line = 0;
   code_event.script_column = 0;
-  code_event.code_type = kLogEventsNames[CodeEventListener::REG_EXP_TAG];
+  code_event.code_type = ChangeMeLater(CodeEventListener::REG_EXP_TAG);
   code_event.comment = "";
 
   code_event_handler_->Handler(reinterpret_cast<v8::CodeEvent*>(&code_event));

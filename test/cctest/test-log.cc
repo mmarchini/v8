@@ -264,7 +264,7 @@ class TestCodeEventHandler : public v8::CodeEventHandler {
   }
 
   void Handler(v8::CodeEvent* code_event) override {
-    const char* code_type = code_event->GetCodeType();
+    const char* code_type = v8::CodeEvent::GetCodeEventTypeName(code_event->GetCodeType());
     char function_name[1000];
     strncpy(function_name, code_type, 1000);
     function_name[strlen(code_type)] = ' ';

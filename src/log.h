@@ -438,7 +438,7 @@ struct CodeEvent {
   Handle<String> script_name;
   int script_line;
   int script_column;
-  const char* code_type;
+  CodeEventType code_type;
   const char* comment;
 };
 

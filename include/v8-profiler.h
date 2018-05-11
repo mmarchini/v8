@@ -992,6 +992,29 @@ struct HeapStatsUpdate {
   uint32_t size;  // New value of size field for the interval with this index.
 };
 
+
+#define CODE_EVENTS_LIST(V)  \
+  V(Builtin) \
+  V(Callback) \
+  V(Eval) \
+  V(Function) \
+  V(InterpretedFunction) \
+  V(Handler) \
+  V(BytecodeHandler) \
+  V(LazyCompile) \
+  V(RegExp) \
+  V(Script) \
+  V(Stub)
+
+
+enum CodeEventType {
+  kUnknownType = 0
+#define V(Name) , k##Name##Type
+  CODE_EVENTS_LIST(V)
+#undef V
+};
+
+
 /**
  * Representation of a code creation event
  */
@@ -1008,8 +1031,10 @@ class V8_EXPORT CodeEvent {
    * existing code, and both the code type and the comment are not stored in the
    * heap, so we return those as const char*.
    */
-  const char* GetCodeType();
+  CodeEventType GetCodeType();
   const char* GetComment();
+
+  static const char* GetCodeEventTypeName(CodeEventType code_event_type);
 };
 
 /**

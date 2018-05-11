@@ -10123,12 +10123,22 @@ int CodeEvent::GetScriptColumn() {
   return reinterpret_cast<i::CodeEvent*>(this)->script_column;
 }
 
-const char* CodeEvent::GetCodeType() {
+CodeEventType CodeEvent::GetCodeType() {
   return reinterpret_cast<i::CodeEvent*>(this)->code_type;
 }
 
 const char* CodeEvent::GetComment() {
   return reinterpret_cast<i::CodeEvent*>(this)->comment;
+}
+
+const char* CodeEvent::GetCodeEventTypeName(CodeEventType code_event_type) {
+  switch(code_event_type) {
+    case kUnknownType:
+      return "Unknown";
+#define V(Name) case k##Name##Type: return #Name;
+  CODE_EVENTS_LIST(V)
+#undef V
+  }
 }
 
 CodeEventListener* CodeEventListener::New(Isolate* isolate) {
