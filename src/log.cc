@@ -380,9 +380,9 @@ void ExternalCodeEventListener::CodeCreateEvent(
       static_cast<uintptr_t>(code->InstructionStart());
   code_event.code_size = static_cast<size_t>(code->InstructionSize());
   code_event.function_name =
-      Handle<String>(isolate_->heap()->empty_string(), isolate_);
+      isolate_->factory()->empty_string();
   code_event.script_name =
-      Handle<String>(isolate_->heap()->empty_string(), isolate_);
+      isolate_->factory()->empty_string();
   code_event.script_line = 0;
   code_event.script_column = 0;
   code_event.code_type = ChangeMeLater(tag);
@@ -402,7 +402,7 @@ void ExternalCodeEventListener::CodeCreateEvent(
   code_event.code_size = static_cast<size_t>(code->InstructionSize());
   code_event.function_name = name_string;
   code_event.script_name =
-      Handle<String>(isolate_->heap()->empty_string(), isolate_);
+      isolate_->factory()->empty_string();
   code_event.script_line = 0;
   code_event.script_column = 0;
   code_event.code_type = ChangeMeLater(tag);
@@ -423,7 +423,7 @@ void ExternalCodeEventListener::CodeCreateEvent(
   code_event.code_size = static_cast<size_t>(code->InstructionSize());
   code_event.function_name = name_string;
   code_event.script_name =
-      Handle<String>(isolate_->heap()->empty_string(), isolate_);
+    isolate_->factory()->empty_string();
   code_event.script_line = 0;
   code_event.script_column = 0;
   code_event.code_type = ChangeMeLater(tag);
@@ -469,7 +469,7 @@ void ExternalCodeEventListener::RegExpCodeCreateEvent(AbstractCode* code,
   code_event.code_size = static_cast<size_t>(code->InstructionSize());
   code_event.function_name = Handle<String>(source, isolate_);
   code_event.script_name =
-      Handle<String>(isolate_->heap()->empty_string(), isolate_);
+     isolate_->factory()->empty_string();
   code_event.script_line = 0;
   code_event.script_column = 0;
   code_event.code_type = ChangeMeLater(CodeEventListener::REG_EXP_TAG);
