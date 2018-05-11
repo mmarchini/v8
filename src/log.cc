@@ -57,6 +57,12 @@ static v8::CodeEventType ChangeMeLater(CodeEventListener::LogEventsAndTags tag) 
 #undef V
   }
 }
+#define CALL_CODE_EVENT_HANDLER(Call) \
+if(listener_) { \
+  listener_->Call; \
+} else { \
+  PROFILE(isolate_, Call); \
+}
 
 static const char* ComputeMarker(SharedFunctionInfo* shared,
                                  AbstractCode* code) {
@@ -2055,11 +2061,7 @@ void CollectExistingCode::LogCodeObject(Object* object) {
     case AbstractCode::NUMBER_OF_KINDS:
       UNIMPLEMENTED();
   }
-  if (listener_) {
-    listener_->CodeCreateEvent(tag, code_object, description);
-  } else {
-    PROFILE(isolate_, CodeCreateEvent(tag, code_object, description));
-  }
+  CALL_CODE_EVENT_HANDLER(CodeCreateEvent(tag, code_object, description))
 }
 
 void CollectExistingCode::LogCodeObjects() {
@@ -2103,14 +2105,8 @@ void CollectExistingCode::LogBytecodeHandler(
     Code* code) {
   std::string bytecode_name =
       interpreter::Bytecodes::ToString(bytecode, operand_scale);
-  if (listener_) {
-    listener_->CodeCreateEvent(CodeEventListener::BYTECODE_HANDLER_TAG,
-                               AbstractCode::cast(code), bytecode_name.c_str());
-  } else {
-    PROFILE(isolate_,
-            CodeCreateEvent(CodeEventListener::BYTECODE_HANDLER_TAG,
-                            AbstractCode::cast(code), bytecode_name.c_str()));
-  }
+    CALL_CODE_EVENT_HANDLER(CodeCreateEvent(CodeEventListener::BYTECODE_HANDLER_TAG,
+                               AbstractCode::cast(code), bytecode_name.c_str()))
 }
 
 void CollectExistingCode::LogBytecodeHandlers() {
@@ -2134,6 +2130,7 @@ void CollectExistingCode::LogBytecodeHandlers() {
   }
 }
 
+
 void CollectExistingCode::LogExistingFunction(Handle<SharedFunctionInfo> shared,
                                               Handle<AbstractCode> code) {
   if (shared->script()->IsScript()) {
@@ -2144,47 +2141,22 @@ void CollectExistingCode::LogExistingFunction(Handle<SharedFunctionInfo> shared,
     if (script->name()->IsString()) {
       Handle<String> script_name(String::cast(script->name()));
       if (line_num > 0) {
-        if (listener_) {
-          listener_->CodeCreateEvent(
+        CALL_CODE_EVENT_HANDLER(CodeCreateEvent(
               Logger::ToNativeByScript(CodeEventListener::LAZY_COMPILE_TAG,
                                        *script),
-              *code, *shared, *script_name, line_num, column_num);
-
-        } else {
-          PROFILE(isolate_,
-                  CodeCreateEvent(
-                      Logger::ToNativeByScript(
-                          CodeEventListener::LAZY_COMPILE_TAG, *script),
-                      *code, *shared, *script_name, line_num, column_num));
-        }
+              *code, *shared, *script_name, line_num, column_num))
       } else {
         // Can't distinguish eval and script here, so always use Script.
-        if (listener_) {
-          listener_->CodeCreateEvent(
+        CALL_CODE_EVENT_HANDLER(CodeCreateEvent(
               Logger::ToNativeByScript(CodeEventListener::SCRIPT_TAG, *script),
-              *code, *shared, *script_name);
-
-        } else {
-          PROFILE(isolate_,
-                  CodeCreateEvent(Logger::ToNativeByScript(
-                                      CodeEventListener::SCRIPT_TAG, *script),
-                                  *code, *shared, *script_name));
-        }
+              *code, *shared, *script_name))
       }
     } else {
-      if (listener_) {
-        listener_->CodeCreateEvent(
+      CALL_CODE_EVENT_HANDLER(CodeCreateEvent(
             Logger::ToNativeByScript(CodeEventListener::LAZY_COMPILE_TAG,
                                      *script),
             *code, *shared, isolate_->heap()->empty_string(), line_num,
-            column_num);
-      } else {
-        PROFILE(isolate_, CodeCreateEvent(
-                              Logger::ToNativeByScript(
-                                  CodeEventListener::LAZY_COMPILE_TAG, *script),
-                              *code, *shared, isolate_->heap()->empty_string(),
-                              line_num, column_num));
-      }
+            column_num))
     }
   } else if (shared->IsApiFunction()) {
     // API function.
@@ -2197,21 +2169,11 @@ void CollectExistingCode::LogExistingFunction(Handle<SharedFunctionInfo> shared,
 #if USES_FUNCTION_DESCRIPTORS
       entry_point = *FUNCTION_ENTRYPOINT_ADDRESS(entry_point);
 #endif
-      if (listener_) {
-        listener_->CallbackEvent(shared->DebugName(), entry_point);
-      } else {
-        PROFILE(isolate_, CallbackEvent(shared->DebugName(), entry_point));
-      }
+      CALL_CODE_EVENT_HANDLER(CallbackEvent(shared->DebugName(), entry_point))
     }
   } else {
-    if (listener_) {
-      listener_->CodeCreateEvent(CodeEventListener::LAZY_COMPILE_TAG, *code,
-                                 *shared, isolate_->heap()->empty_string());
-    } else {
-      PROFILE(isolate_,
-              CodeCreateEvent(CodeEventListener::LAZY_COMPILE_TAG, *code,
-                              *shared, isolate_->heap()->empty_string()));
-    }
+    CALL_CODE_EVENT_HANDLER(CodeCreateEvent(CodeEventListener::LAZY_COMPILE_TAG, *code,
+                                 *shared, isolate_->heap()->empty_string()))
   }
 }
 
