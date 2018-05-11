@@ -364,7 +364,7 @@ void ExternalCodeEventListener::StartListening(
     return;
   }
   code_event_handler_ = code_event_handler;
-  is_listening_ = isolate_->AddCodeEventListener(this);
+  is_listening_ = isolate_->code_event_dispatcher()->AddListener(this);
   if (is_listening_) {
     LogExistingCode();
   }
@@ -374,7 +374,8 @@ void ExternalCodeEventListener::StopListening() {
   if (!is_listening_) {
     return;
   }
-  isolate_->RemoveCodeEventListener(this);
+
+  isolate_->code_event_dispatcher()->RemoveListener(this);
   is_listening_ = false;
 }
 
@@ -1241,7 +1242,7 @@ void AppendCodeCreateHeader(Log::MessageBuilder& msg,
 
 void Logger::CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,
                              AbstractCode* code, const char* comment) {
-  if (!is_logging_code_events()) return;
+  if (!is_listening_to_code_events()) return;
   if (!FLAG_log_code || !log_->IsEnabled()) return;
   Log::MessageBuilder msg(log_);
   AppendCodeCreateHeader(msg, tag, code, &timer_);
@@ -1251,7 +1252,7 @@ void Logger::CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,
 
 void Logger::CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,
                              AbstractCode* code, Name* name) {
-  if (!is_logging_code_events()) return;
+  if (!is_listening_to_code_events()) return;
   if (!FLAG_log_code || !log_->IsEnabled()) return;
   Log::MessageBuilder msg(log_);
   AppendCodeCreateHeader(msg, tag, code, &timer_);
@@ -1262,7 +1263,7 @@ void Logger::CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,
 void Logger::CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,
                              AbstractCode* code, SharedFunctionInfo* shared,
                              Name* name) {
-  if (!is_logging_code_events()) return;
+  if (!is_listening_to_code_events()) return;
   if (!FLAG_log_code || !log_->IsEnabled()) return;
   if (code == AbstractCode::cast(
                   isolate_->builtins()->builtin(Builtins::kCompileLazy))) {
@@ -1278,7 +1279,7 @@ void Logger::CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,
 
 void Logger::CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,
                              const wasm::WasmCode* code, wasm::WasmName name) {
-  if (!is_logging_code_events()) return;
+  if (!is_listening_to_code_events()) return;
   if (!FLAG_log_code || !log_->IsEnabled()) return;
   Log::MessageBuilder msg(log_);
   AppendCodeCreateHeader(msg, tag, AbstractCode::Kind::WASM_FUNCTION,
@@ -1306,7 +1307,7 @@ void Logger::CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,
 void Logger::CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,
                              AbstractCode* code, SharedFunctionInfo* shared,
                              Name* source, int line, int column) {
-  if (!is_logging_code_events()) return;
+  if (!is_listening_to_code_events()) return;
   if (!FLAG_log_code || !log_->IsEnabled()) return;
 
   Log::MessageBuilder msg(log_);
@@ -1423,7 +1424,7 @@ void Logger::CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,
 
 void Logger::CodeDisableOptEvent(AbstractCode* code,
                                  SharedFunctionInfo* shared) {
-  if (!is_logging_code_events()) return;
+  if (!is_listening_to_code_events()) return;
   if (!FLAG_log_code || !log_->IsEnabled()) return;
   Log::MessageBuilder msg(log_);
   msg << kLogEventsNames[CodeEventListener::CODE_DISABLE_OPT_EVENT] << kNext
@@ -1434,13 +1435,13 @@ void Logger::CodeDisableOptEvent(AbstractCode* code,
 
 
 void Logger::CodeMovingGCEvent() {
-  if (!is_logging_code_events()) return;
+  if (!is_listening_to_code_events()) return;
   if (!log_->IsEnabled() || !FLAG_ll_prof) return;
   base::OS::SignalCodeMovingGC();
 }
 
 void Logger::RegExpCodeCreateEvent(AbstractCode* code, String* source) {
-  if (!is_logging_code_events()) return;
+  if (!is_listening_to_code_events()) return;
   if (!FLAG_log_code || !log_->IsEnabled()) return;
   Log::MessageBuilder msg(log_);
   AppendCodeCreateHeader(msg, CodeEventListener::REG_EXP_TAG, code, &timer_);
@@ -1449,7 +1450,7 @@ void Logger::RegExpCodeCreateEvent(AbstractCode* code, String* source) {
 }
 
 void Logger::CodeMoveEvent(AbstractCode* from, Address to) {
-  if (!is_logging_code_events()) return;
+  if (!is_listening_to_code_events()) return;
   MoveEventInternal(CodeEventListener::CODE_MOVE_EVENT, from->address(), to);
 }
 
@@ -1498,7 +1499,7 @@ void Logger::CodeNameEvent(Address addr, int pos, const char* code_name) {
 
 
 void Logger::SharedFunctionInfoMoveEvent(Address from, Address to) {
-  if (!is_logging_code_events()) return;
+  if (!is_listening_to_code_events()) return;
   MoveEventInternal(CodeEventListener::SHARED_FUNC_MOVE_EVENT, from, to);
 }
 

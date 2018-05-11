@@ -2891,7 +2891,7 @@ void CreateOffHeapTrampolines(Isolate* isolate) {
     // thus collected by the GC.
     builtins->set_builtin(i, *trampoline);
 
-    if (isolate->logger()->is_logging_code_events() ||
+    if (isolate->logger()->is_listening_to_code_events() ||
         isolate->is_profiling()) {
       isolate->logger()->LogCodeObject(*trampoline);
     }
@@ -3275,21 +3275,6 @@ CompilationStatistics* Isolate::GetTurboStatistics() {
 CodeTracer* Isolate::GetCodeTracer() {
   if (code_tracer() == nullptr) set_code_tracer(new CodeTracer(id()));
   return code_tracer();
-}
-
-bool Isolate::AddCodeEventListener(
-    ExternalCodeEventListener* code_event_listener) {
-  bool is_listening = code_event_dispatcher()->AddListener(code_event_listener);
-  if (is_listening) {
-    code_event_listener_count_++;
-  }
-  return is_listening;
-}
-
-void Isolate::RemoveCodeEventListener(
-    ExternalCodeEventListener* code_event_listener) {
-  code_event_dispatcher()->RemoveListener(code_event_listener);
-  code_event_listener_count_--;
 }
 
 bool Isolate::use_optimizer() {

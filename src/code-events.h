@@ -91,6 +91,8 @@ class CodeEventListener {
   enum DeoptKind { kSoft, kLazy, kEager };
   virtual void CodeDeoptEvent(Code* code, DeoptKind kind, Address pc,
                               int fp_to_sp_delta) = 0;
+
+  virtual bool is_listening_to_code_events() { return false; }
 };
 
 class CodeEventDispatcher {
@@ -106,6 +108,12 @@ class CodeEventDispatcher {
   void RemoveListener(CodeEventListener* listener) {
     base::LockGuard<base::Mutex> guard(&mutex_);
     listeners_.erase(listener);
+  }
+  bool IsListeningToCodeEvents() {
+    for (auto it : listeners_) {
+      if(it->is_listening_to_code_events()) { return true; }
+    }
+    return false;
   }
 
 #define CODE_EVENT_DISPATCH(code)              \

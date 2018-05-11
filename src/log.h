@@ -95,7 +95,7 @@ class WasmCode;
 #define LOG_CODE_EVENT(isolate, Call)                   \
   do {                                                  \
     v8::internal::Logger* logger = (isolate)->logger(); \
-    if (logger->is_logging_code_events()) logger->Call; \
+    if (logger->is_listening_to_code_events()) logger->Call; \
   } while (false)
 
 class CollectExistingCode {
@@ -251,7 +251,7 @@ class Logger : public CodeEventListener {
     return is_logging_;
   }
 
-  bool is_logging_code_events() {
+  bool is_listening_to_code_events() {
     return is_logging() || jit_logger_ != nullptr;
   }
 
@@ -473,6 +473,10 @@ class ExternalCodeEventListener : public CodeEventListener {
 
   void StartListening(CodeEventHandler* code_event_handler);
   void StopListening();
+
+  bool is_listening_to_code_events() override {
+    return true;
+  }
 
  private:
   void LogExistingCode();
